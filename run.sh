@@ -6,22 +6,23 @@
 #SBATCH --gres=gpu:1
 #SBATCH --output=compute.log
 
+export CUDA_VISIBLE_DEVICES=0
 
-stage=2
-stop_stage=4
+stage=1
+stop_stage=1
 
 # config files
 
 # Data related
 d_root=data
-LANG=th
-TASK=ALT-SAP
+LANG=km
+TASK=ALT
 SYSID=bad
 hyp_path=${d_root}/${TASK}/${LANG}/${SYSID}_hyp.txt
 hyp_fm_output_path=${d_root}/${TASK}/${LANG}/${SYSID}_hyp.fm.prob
-ref_path=${d_root}/${TASK}/${LANG}/ref.txt
-ref_fm_output_path=${d_root}/${TASK}/${LANG}/ref.fm.prob
-num_test_cases=10
+ref_path=${d_root}/${TASK}/${LANG}/${SYSID}_ref.txt
+ref_fm_output_path=${d_root}/${TASK}/${LANG}/${SYSID}_ref.fm.prob
+num_test_cases=200
 
 
 # Set bash to 'debug' mode, it will exit on :
@@ -30,15 +31,17 @@ set -e
 set -u
 set -o pipefail
 
+result_path=./result
+
 # ===========================================
 # AM part
 # ===========================================
-am_model_path=./models/${TASK}/${LANG}/am/${LANG}.bin
-am_result_file=./result
 
-if [ ! -d ${am_result_file} ]; then
-	mkdir -p ${am_result_file}
+if [ ! -d ${result_path} ]; then
+	mkdir -p ${result_path}
 fi
+
+am_model_path=./models/${TASK}/en-${LANG}_am
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     echo "stage 1: Compute AM Score"
@@ -46,25 +49,19 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         --hyp_file=${hyp_path} \
         --ref_file=${ref_path} \
         --num_test=${num_test_cases} \
-        --save_path=${am_result_file}/${TASK}_${SYSID}_am.score \
-		--model_path=${am_model_path} \
-		--lang=${LANG}
+        --save_path=${result_path}/${TASK}_${SYSID}_${LANG}_am.score \
+		--model_path=${am_model_path}
 fi
 
 ## # ===========================================
 ## # FM part
 ## # ===========================================
 
-fm_model_path=./models/${TASK}/${LANG}_lm
-fm_result_file=./result
-
-if [ ! -d ${fm_result_file} ]; then
-	mkdir -p ${fm_result_file}
-fi
-
 ## compute FM score
 #
 #
+
+fm_model_path=./models/${TASK}/${LANG}_lm
 
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
 	echo "stage 2: Compute hypothesis sentence-level probability"
@@ -98,7 +95,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
         --hyp_file=${hyp_fm_output_path} \
         --ref_file=${ref_fm_output_path} \
         --num_test=${num_test_cases} \
-        --save_path=${fm_result_file}/${TASK}_${SYSID}_fm.score
+        --save_path=${result_path}/${TASK}_${SYSID}_${LANG}_fm.score
 fi
 
 
@@ -110,10 +107,10 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
 
     echo "stage 5: Combine AM & FM scores"
     python amfm.py \
-        --am_score=${am_result_file}/${SYSID}_am.score \
-        --fm_score=${fm_result_file}/${SYSID}_fm.score \
+        --am_score=${result_path}/${TASK}_${SYSID}_${LANG}_am.score \
+        --fm_score=${result_path}/${TASK}_${SYSID}_${LANG}_fm.score \
         --lambda_value=0.5 \
-		--save_path=./result/${TASK}/${LANG}/${SYSID}_amfm.score
+		--save_path=./result/${TASK}_${SYSID}_${LANG}_amfm.score
 fi
 
 echo "Thank you for using Deep AMFM Framework"
