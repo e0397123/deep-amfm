@@ -9,20 +9,22 @@
 export CUDA_VISIBLE_DEVICES=0
 
 stage=1
-stop_stage=1
+stop_stage=5
 
 # config files
 
 # Data related
-d_root=data
-LANG=km
-TASK=ALT
+d_root=sample-data
+LANG=ms
+TASK=ALT-SAP
 SYSID=bad
+am_model_path=./models/${TASK}/en-ms_am
+fm_model_path=./models/${TASK}/${LANG}_lm
 hyp_path=${d_root}/${TASK}/${LANG}/${SYSID}_hyp.txt
 hyp_fm_output_path=${d_root}/${TASK}/${LANG}/${SYSID}_hyp.fm.prob
 ref_path=${d_root}/${TASK}/${LANG}/${SYSID}_ref.txt
 ref_fm_output_path=${d_root}/${TASK}/${LANG}/${SYSID}_ref.fm.prob
-num_test_cases=200
+num_test_cases=10
 
 
 # Set bash to 'debug' mode, it will exit on :
@@ -40,8 +42,6 @@ result_path=./result
 if [ ! -d ${result_path} ]; then
 	mkdir -p ${result_path}
 fi
-
-am_model_path=./models/${TASK}/en-${LANG}_am
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     echo "stage 1: Compute AM Score"
@@ -61,8 +61,6 @@ fi
 #
 #
 
-fm_model_path=./models/${TASK}/${LANG}_lm
-
 if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
 	echo "stage 2: Compute hypothesis sentence-level probability"
 	python compute_ppl.py \
@@ -71,7 +69,6 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
         --model_name_or_path=xlm-roberta-base \
         --do_eval \
         --eval_data_file=${hyp_path} \
-        --per_gpu_eval_batch_size=1 \
         --overwrite_cache \
         --mlm
 fi
@@ -84,7 +81,6 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
         --model_name_or_path=xlm-roberta-base \
         --do_eval \
         --eval_data_file=${ref_path} \
-        --per_gpu_eval_batch_size=1 \
         --overwrite_cache \
         --mlm
 fi

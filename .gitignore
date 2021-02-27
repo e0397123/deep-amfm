@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 data/
+sample-data/
 models/
 result/

@@ -268,7 +268,7 @@ def main():
                         help="Whether to run eval on the dev set.")
     parser.add_argument("--do_lower_case", action='store_true',
                         help="Set this flag if you are using an uncased model.")
-    parser.add_argument("--per_gpu_eval_batch_size", default=4, type=int,
+    parser.add_argument("--per_gpu_eval_batch_size", default=1, type=int,
                         help="Batch size per GPU/CPU for evaluation.")
     parser.add_argument('--gradient_accumulation_steps', type=int, default=1,
                         help="Number of updates steps to accumulate before performing a backward/update pass.")
