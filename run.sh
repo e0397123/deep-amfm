@@ -15,16 +15,23 @@ stop_stage=5
 
 # Data related
 d_root=sample-data
-LANG=ms
-TASK=ALT-SAP
+SRC_LANG=en
+TGT_LANG=km
+TASK=ALT
 SYSID=bad
-am_model_path=./models/${TASK}/en-ms_am
-fm_model_path=./models/${TASK}/${LANG}_lm
-hyp_path=${d_root}/${TASK}/${LANG}/${SYSID}_hyp.txt
-hyp_fm_output_path=${d_root}/${TASK}/${LANG}/${SYSID}_hyp.fm.prob
-ref_path=${d_root}/${TASK}/${LANG}/${SYSID}_ref.txt
-ref_fm_output_path=${d_root}/${TASK}/${LANG}/${SYSID}_ref.fm.prob
-num_test_cases=10
+# for translation from other languages to english
+# uncomment the following line.
+# am_model_path=./models/${TASK}/${TGT_LANG}-${SRC_LANG}_am
+# for translation to other languages
+# uncomment the following line
+am_model_path=./models/${TASK}/${SRC_LANG}-${TGT_LANG}_am
+
+fm_model_path=./models/${TASK}/${TGT_LANG}_lm
+hyp_path=${d_root}/${TASK}/${TGT_LANG}/${SYSID}_hyp.txt
+hyp_fm_output_path=${d_root}/${TASK}/${TGT_LANG}/${SYSID}_hyp.fm.prob
+ref_path=${d_root}/${TASK}/${TGT_LANG}/${SYSID}_ref.txt
+ref_fm_output_path=${d_root}/${TASK}/${TGT_LANG}/${SYSID}_ref.fm.prob
+num_test_cases=200
 
 
 # Set bash to 'debug' mode, it will exit on :
@@ -49,7 +56,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
         --hyp_file=${hyp_path} \
         --ref_file=${ref_path} \
         --num_test=${num_test_cases} \
-        --save_path=${result_path}/${TASK}_${SYSID}_${LANG}_am.score \
+        --save_path=${result_path}/${TASK}_${SYSID}_${TGT_LANG}_am.score \
 		--model_path=${am_model_path}
 fi
 
@@ -91,7 +98,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
         --hyp_file=${hyp_fm_output_path} \
         --ref_file=${ref_fm_output_path} \
         --num_test=${num_test_cases} \
-        --save_path=${result_path}/${TASK}_${SYSID}_${LANG}_fm.score
+        --save_path=${result_path}/${TASK}_${SYSID}_${TGT_LANG}_fm.score
 fi
 
 
@@ -103,10 +110,10 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
 
     echo "stage 5: Combine AM & FM scores"
     python amfm.py \
-        --am_score=${result_path}/${TASK}_${SYSID}_${LANG}_am.score \
-        --fm_score=${result_path}/${TASK}_${SYSID}_${LANG}_fm.score \
+        --am_score=${result_path}/${TASK}_${SYSID}_${TGT_LANG}_am.score \
+        --fm_score=${result_path}/${TASK}_${SYSID}_${TGT_LANG}_fm.score \
         --lambda_value=0.5 \
-		--save_path=./result/${TASK}_${SYSID}_${LANG}_amfm.score
+		--save_path=./result/${TASK}_${SYSID}_${TGT_LANG}_amfm.score
 fi
 
 echo "Thank you for using Deep AMFM Framework"

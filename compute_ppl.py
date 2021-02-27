@@ -204,8 +204,8 @@ def evaluate(args, model, tokenizer, prefix=""):
     scores = []
     for batch in tqdm(eval_dataloader, desc="Evaluating"):
         inputs, labels = mask_tokens_understandable(batch, tokenizer, args) if args.mlm else (batch, batch)
-        if inputs.size(0) > 50: 
-            number_to_split = int(inputs.size(0)/50) + 1
+        if inputs.size(0) > 60: 
+            number_to_split = int(inputs.size(0)/60) + 1
             splitted_inputs = torch.split(inputs, split_size_or_sections=number_to_split, dim=0)
             splitted_labels = torch.split(inputs, split_size_or_sections=number_to_split, dim=0)
             per_sequence_loss = 0.0
